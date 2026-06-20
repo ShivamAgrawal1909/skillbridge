@@ -1,12 +1,18 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
-
-from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_health():
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/health")
+async def test_health(client):
+    response = await client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_security_headers(client):
+    response = await client.get("/health")
+    assert "x-frame-options" in response.headers
+    assert "x-content-type-options" in response.headers
+    assert "content-security-policy" in response.headers
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["x-content-type-options"] == "nosniff"

@@ -1,8 +1,8 @@
 import time
-from functools import wraps
 
 from fastapi import HTTPException, Request, status
 
+from app.config import settings
 from app.utils.redis import redis
 
 
@@ -11,7 +11,10 @@ async def rate_limit(
     max_requests: int = 100,
     window_seconds: int = 60,
 ):
-    # use user id if authed, else IP
+    # skip rate limiting in test environment
+    if settings.ENV == "test":
+        return
+
     user_id = getattr(request.state, "user_id", None)
     identifier = str(user_id) if user_id else request.client.host
     key = f"ratelimit:{identifier}:{request.url.path}"
@@ -34,7 +37,6 @@ async def rate_limit(
 
 
 def strict_limit(max_requests: int = 5, window_seconds: int = 60):
-    """decorator for sensitive endpoints like register, login"""
     async def dependency(request: Request):
         await rate_limit(request, max_requests, window_seconds)
     return dependency
