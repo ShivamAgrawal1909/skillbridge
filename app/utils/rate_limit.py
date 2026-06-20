@@ -1,12 +1,20 @@
 import time
+from functools import wraps
 
 from fastapi import HTTPException, Request, status
 
 from app.utils.redis import redis
 
 
-async def rate_limit(request: Request, max_requests: int = 100, window_seconds: int = 60):
-    key = f"ratelimit:{request.client.host}:{request.url.path}"
+async def rate_limit(
+    request: Request,
+    max_requests: int = 100,
+    window_seconds: int = 60,
+):
+    # use user id if authed, else IP
+    user_id = getattr(request.state, "user_id", None)
+    identifier = str(user_id) if user_id else request.client.host
+    key = f"ratelimit:{identifier}:{request.url.path}"
     now = time.time()
     window_start = now - window_seconds
 
@@ -21,5 +29,12 @@ async def rate_limit(request: Request, max_requests: int = 100, window_seconds: 
     if count > max_requests:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many requests. Slow down.",
+            detail="Too many requests. Please slow down.",
         )
+
+
+def strict_limit(max_requests: int = 5, window_seconds: int = 60):
+    """decorator for sensitive endpoints like register, login"""
+    async def dependency(request: Request):
+        await rate_limit(request, max_requests, window_seconds)
+    return dependency

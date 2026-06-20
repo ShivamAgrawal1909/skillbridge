@@ -7,6 +7,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.config import settings
 from app.database import engine
 from app.routers import auth, message, provider, request, review
+from app.utils.security_headers import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -24,6 +25,8 @@ app = FastAPI(
     redoc_url=None,
     lifespan=lifespan,
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
