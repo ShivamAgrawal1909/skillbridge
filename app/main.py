@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import settings
 from app.database import engine
-from app.routers import auth, message, provider, request
+from app.routers import auth, message, provider, request, review
 
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ app.include_router(auth.router)
 app.include_router(provider.router)
 app.include_router(request.router)
 app.include_router(message.router)
+app.include_router(review.router)
 
 
 @app.get("/health")
