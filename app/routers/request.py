@@ -66,6 +66,26 @@ async def list_proposals(
     client: User = Depends(require_client),
     db: AsyncSession = Depends(get_db),
 ):
+    from sqlalchemy import select
+    from app.models.user import User as UserModel
+    proposals = await get_request_proposals(request_id, client, db)
+    result = []
+    for p in proposals:
+        user_result = await db.execute(
+            select(UserModel).where(UserModel.id == p.provider_id)
+        )
+        provider_user = user_result.scalar_one_or_none()
+        result.append({
+            "id": p.id,
+            "request_id": p.request_id,
+            "provider_id": p.provider_id,
+            "cover_letter": p.cover_letter,
+            "proposed_amount": p.proposed_amount,
+            "delivery_days": p.delivery_days,
+            "status": p.status,
+            "provider_name": provider_user.full_name if provider_user else None,
+        })
+    return result
     proposals = await get_request_proposals(request_id, client, db)
     return [
         {

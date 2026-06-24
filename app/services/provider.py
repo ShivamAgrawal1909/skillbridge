@@ -85,6 +85,15 @@ async def search_providers(
         .limit(limit)
     )
 
+    if category_slug:
+        from app.models.category import Category, Skill
+        skill_subq = select(ProviderSkill.provider_id).join(
+            Skill, ProviderSkill.skill_id == Skill.id
+        ).join(
+            Category, Skill.category_id == Category.id
+        ).where(Category.slug == category_slug)
+        query = query.where(ProviderProfile.id.in_(skill_subq))
+
     if min_rating:
         query = query.where(ProviderProfile.avg_rating >= min_rating)
     if max_rate:
