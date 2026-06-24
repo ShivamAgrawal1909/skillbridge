@@ -1,9 +1,11 @@
 import uuid
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models.request import RequestStatus, ServiceRequest
 from app.models.user import User
 from app.schemas.request import (
     ProposalCreate,
@@ -30,6 +32,20 @@ async def post_request(
     db: AsyncSession = Depends(get_db),
 ):
     return await create_request(data, client, db)
+
+
+@router.get("/open", response_model=list[ServiceRequestResponse])
+async def open_requests(
+    provider: User = Depends(require_provider),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(ServiceRequest)
+        .where(ServiceRequest.status == RequestStatus.open)
+        .order_by(ServiceRequest.created_at.desc())
+        .limit(20)
+    )
+    return result.scalars().all()
 
 
 @router.get("", response_model=list[ServiceRequestResponse])
@@ -66,13 +82,11 @@ async def list_proposals(
     client: User = Depends(require_client),
     db: AsyncSession = Depends(get_db),
 ):
-    from sqlalchemy import select
-    from app.models.user import User as UserModel
     proposals = await get_request_proposals(request_id, client, db)
     result = []
     for p in proposals:
         user_result = await db.execute(
-            select(UserModel).where(UserModel.id == p.provider_id)
+            select(User).where(User.id == p.provider_id)
         )
         provider_user = user_result.scalar_one_or_none()
         result.append({
@@ -86,20 +100,6 @@ async def list_proposals(
             "provider_name": provider_user.full_name if provider_user else None,
         })
     return result
-    proposals = await get_request_proposals(request_id, client, db)
-    return [
-        {
-            "id": p.id,
-            "request_id": p.request_id,
-            "provider_id": p.provider_id,
-            "cover_letter": p.cover_letter,
-            "proposed_amount": p.proposed_amount,
-            "delivery_days": p.delivery_days,
-            "status": p.status,
-            "provider_name": None,
-        }
-        for p in proposals
-    ]
 
 
 @router.patch("/proposals/{proposal_id}/accept", response_model=ProposalResponse)
