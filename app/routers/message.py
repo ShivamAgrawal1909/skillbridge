@@ -1,9 +1,11 @@
 import uuid
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models.message import Conversation
 from app.models.user import User
 from app.schemas.message import ConversationResponse, MessageCreate, MessageResponse
 from app.services.message import (
@@ -17,7 +19,6 @@ from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
-# in-memory store for active WebSocket connections
 active_connections: dict[str, list[WebSocket]] = {}
 
 
@@ -30,12 +31,19 @@ async def list_conversations(
     result = []
     for conv in conversations:
         unread = await get_unread_count(user.id, conv.id)
+
+        # get the other person's name
+        other_id = conv.provider_id if user.id == conv.client_id else conv.client_id
+        other_result = await db.execute(select(User).where(User.id == other_id))
+        other_user = other_result.scalar_one_or_none()
+
         result.append({
             "id": conv.id,
             "client_id": conv.client_id,
             "provider_id": conv.provider_id,
             "request_id": conv.request_id,
             "unread_count": unread,
+            "other_name": other_user.full_name if other_user else "Unknown",
         })
     return result
 
@@ -54,6 +62,7 @@ async def start_conversation(
         "provider_id": conv.provider_id,
         "request_id": conv.request_id,
         "unread_count": 0,
+        "other_name": None,
     }
 
 
@@ -76,7 +85,6 @@ async def post_message(
 ):
     message = await send_message(conversation_id, data.content, user, db)
 
-    # broadcast to WebSocket if receiver is connected
     conv_key = str(conversation_id)
     if conv_key in active_connections:
         for ws in active_connections[conv_key]:
@@ -102,7 +110,7 @@ async def websocket_endpoint(
 
     try:
         while True:
-            await websocket.receive_text()  # keep connection alive
+            await websocket.receive_text()
     except WebSocketDisconnect:
         active_connections[conversation_id].remove(websocket)
         if not active_connections[conversation_id]:

@@ -25,5 +25,6 @@ class ConversationResponse(BaseModel):
     provider_id: uuid.UUID
     request_id: uuid.UUID | None
     unread_count: int = 0
+    other_name: str | None = None
 
     model_config = {"from_attributes": True}
