@@ -1,16 +1,16 @@
-import asyncio
-
-from app.worker import celery
+from app.config import settings
 
 
-@celery.task(bind=True, max_retries=3)
-def send_whatsapp_notification(self, phone: str, message: str):
-    # Phase 7 mein implement hoga
+def send_whatsapp_notification(phone: str, message: str):
     pass
 
 
-@celery.task(bind=True, max_retries=3)
-def run_provider_matching(self, request_id: str):
+def run_provider_matching(request_id: str):
+    from app.config import settings
+    if not settings.REDIS_URL:
+        return
+
+    import asyncio
     from app.database import SessionLocal
     from app.services.request import match_providers
 
@@ -19,6 +19,18 @@ def run_provider_matching(self, request_id: str):
             matched = await match_providers(request_id, db)
             for provider in matched:
                 print(f"Matched provider: {provider.id} for request: {request_id}")
-                # Phase 7 mein WhatsApp notification yahan aayega
 
     asyncio.run(_run())
+
+
+if settings.REDIS_URL:
+    from app.worker import celery
+
+    if celery:
+        send_whatsapp_notification = celery.task(
+            bind=True, max_retries=3
+        )(send_whatsapp_notification)
+
+        run_provider_matching = celery.task(
+            bind=True, max_retries=3
+        )(run_provider_matching)

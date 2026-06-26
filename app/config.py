@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     ENV: str = "development"
 
     DATABASE_URL: str
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = ""  # optional — Redis disabled
 
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
@@ -15,13 +15,11 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    # S3 / Cloudflare R2
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
     S3_BUCKET_NAME: str = ""
-    S3_ENDPOINT_URL: str = ""  # for R2, set this; for AWS leave empty
+    S3_ENDPOINT_URL: str = ""
 
-    # WhatsApp Business Cloud API
     WHATSAPP_API_TOKEN: str = ""
     WHATSAPP_PHONE_NUMBER_ID: str = ""
 

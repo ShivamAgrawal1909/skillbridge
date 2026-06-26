@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.message import Conversation, Message
 from app.models.user import User
-from app.utils.redis import redis
 
 
 async def get_or_create_conversation(
@@ -81,9 +80,11 @@ async def send_message(
     await db.commit()
     await db.refresh(message)
 
-    # increment unread count for the other person
-    other_id = conversation.provider_id if sender.id == conversation.client_id else conversation.client_id
-    await redis.incr(f"unread:{other_id}:{conversation_id}")
+    # increment unread count — only if Redis available
+    from app.utils.redis import redis as redis_client
+    if redis_client:
+        other_id = conversation.provider_id if sender.id == conversation.client_id else conversation.client_id
+        await redis_client.incr(f"unread:{other_id}:{conversation_id}")
 
     return message
 
@@ -114,12 +115,17 @@ async def get_messages(
     )
     messages = result.scalars().all()
 
-    # clear unread count
-    await redis.delete(f"unread:{user.id}:{conversation_id}")
+    # clear unread count — only if Redis available
+    from app.utils.redis import redis as redis_client
+    if redis_client:
+        await redis_client.delete(f"unread:{user.id}:{conversation_id}")
 
     return messages
 
 
 async def get_unread_count(user_id: uuid.UUID, conversation_id: uuid.UUID) -> int:
-    count = await redis.get(f"unread:{user_id}:{conversation_id}")
+    from app.utils.redis import redis as redis_client
+    if not redis_client:
+        return 0
+    count = await redis_client.get(f"unread:{user_id}:{conversation_id}")
     return int(count) if count else 0

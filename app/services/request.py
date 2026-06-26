@@ -1,5 +1,7 @@
 import uuid
 
+from app.tasks import run_provider_matching
+from app.tasks import run_provider_matching
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,7 +33,11 @@ async def create_request(
     await db.refresh(req)
 
     from app.tasks import run_provider_matching
-    run_provider_matching.delay(str(req.id))
+    from app.config import settings
+    if settings.REDIS_URL and hasattr(run_provider_matching, 'delay'):
+        run_provider_matching.delay(str(req.id))
+    else:
+         run_provider_matching(str(req.id))
 
     return req
 

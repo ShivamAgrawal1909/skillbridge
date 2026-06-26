@@ -3,7 +3,6 @@ import time
 from fastapi import HTTPException, Request, status
 
 from app.config import settings
-from app.utils.redis import redis
 
 
 async def rate_limit(
@@ -11,8 +10,12 @@ async def rate_limit(
     max_requests: int = 100,
     window_seconds: int = 60,
 ):
-    # skip rate limiting in test environment
-    if settings.ENV == "test":
+    # skip if Redis not configured or test environment
+    if not settings.REDIS_URL or settings.ENV == "test":
+        return
+
+    from app.utils.redis import redis
+    if not redis:
         return
 
     user_id = getattr(request.state, "user_id", None)
