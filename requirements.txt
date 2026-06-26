@@ -39,3 +39,7 @@ pytest-cov==5.0.0
 
 # security scanning (run in CI)
 pip-audit==2.7.3
+
+
+# database driver fix
+psycopg2-binary==2.9.9
