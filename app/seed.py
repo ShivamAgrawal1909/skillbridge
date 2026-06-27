@@ -1,17 +1,6 @@
 import asyncio
+import os
 import uuid
-import os
-import os
-
-async def seed():
-    async with SessionLocal() as db:
-        # If FORCE_SEED is set, skip the count check
-        if not os.getenv("FORCE_SEED"):
-            result = await db.execute(text("SELECT COUNT(*) FROM categories"))
-            count = result.scalar()
-            if count > 0:
-                print("Already seeded, skipping.")
-                return
 
 from sqlalchemy import text
 
@@ -69,10 +58,10 @@ categories_data = [
 
 async def seed():
     async with SessionLocal() as db:
-        # check if already seeded
+        force = os.environ.get("FORCE_SEED") == "true"
         result = await db.execute(text("SELECT COUNT(*) FROM categories"))
         count = result.scalar()
-        if count > 0:
+        if count > 0 and not force:
             print("Already seeded, skipping.")
             return
 
