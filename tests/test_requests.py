@@ -1,10 +1,9 @@
+import uuid
 import pytest
 
 
 @pytest.mark.asyncio
 async def test_create_request(auth_client):
-    import uuid
-   
     response = await auth_client.post("/requests", json={
         "title": "Test website project",
         "description": "Need a simple website for my business",
@@ -12,7 +11,6 @@ async def test_create_request(auth_client):
         "budget_min": 5000,
         "budget_max": 15000,
     })
-   
     assert response.status_code in [201, 422]
 
 
@@ -25,7 +23,6 @@ async def test_get_my_requests(auth_client):
 
 @pytest.mark.asyncio
 async def test_provider_cannot_post_request(provider_client):
-    import uuid
     response = await provider_client.post("/requests", json={
         "title": "Test",
         "description": "Test description",
