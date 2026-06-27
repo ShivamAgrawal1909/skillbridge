@@ -2,9 +2,12 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.provider import ProviderStatus
+
+from app.models.provider import ProviderStatus, ProviderProfile, ProviderSkill 
 from app.models.user import User
 from app.schemas.provider import ProviderProfileCreate, ProviderProfileResponse, ProviderSearchResult
 from app.services.provider import admin_update_status, create_or_update_profile, get_profile, search_providers
@@ -64,6 +67,24 @@ async def suspend(
 ):
     profile = await admin_update_status(provider_id, ProviderStatus.suspended, admin, db)
     return _format(profile, profile.user if hasattr(profile, 'user') else None)
+
+
+@router.get("/admin/all", response_model=list[ProviderProfileResponse])
+async def all_providers_admin(
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(ProviderProfile)
+        .options(
+            selectinload(ProviderProfile.skills).selectinload(ProviderSkill.skill),
+            selectinload(ProviderProfile.user)
+        )
+        .order_by(ProviderProfile.created_at.desc())
+    )
+    profiles = result.scalars().all()
+    return [_format(p, p.user) for p in profiles]
+# ---------------------------------------------
 
 
 def _format(profile, user) -> dict:
