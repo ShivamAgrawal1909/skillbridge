@@ -245,20 +245,13 @@ Additional observations:
 
 ---
 
-# Monitoring
+## Monitoring
 
-Application metrics are exposed for Prometheus.
+Application metrics are exported through **Prometheus** and visualized using **Grafana**.
 
-Grafana dashboards monitor:
+### Grafana Dashboard
 
-* Total Requests
-* Request Rate
-* Active Connections
-* Response Time
-* p95 Latency
-* p99 Latency
-* Error Rate
-
+![Grafana Dashboard](docs/Screenshot%202026-06-23%20123708.png)
 ---
 
 # Security Considerations
