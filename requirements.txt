@@ -1,7 +1,7 @@
 # web
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
-python-multipart==0.0.9
+python-multipart==0.0.31
 
 # db
 sqlalchemy[asyncio]==2.0.35
@@ -33,7 +33,7 @@ prometheus-fastapi-instrumentator==7.0.0
 sentry-sdk[fastapi]==2.14.0
 
 # testing
-pytest==8.3.3
+pytest==9.0.3
 pytest-asyncio==0.24.0
 pytest-cov==5.0.0
 
