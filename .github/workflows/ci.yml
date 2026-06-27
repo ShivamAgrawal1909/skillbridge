@@ -55,6 +55,7 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://skillbridge:skillbridge@localhost:5432/skillbridge_test
           SECRET_KEY: test-secret-key-not-for-production
+          FORCE_SEED: "true"
         run: python -m app.seed
 
       - name: run tests
