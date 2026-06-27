@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from app.services.auth import login_user, logout_user, refresh_access_token, register_user
@@ -8,6 +9,8 @@ from app.utils.deps import get_current_user
 from app.utils.rate_limit import rate_limit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+IS_PROD = settings.ENV == "production"
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -34,8 +37,8 @@ async def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=IS_PROD,
+        samesite="none" if IS_PROD else "lax",
         max_age=7 * 24 * 60 * 60,
     )
     return {"access_token": access_token}
@@ -56,8 +59,8 @@ async def refresh(
         key="refresh_token",
         value=new_refresh,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=IS_PROD,
+        samesite="none" if IS_PROD else "lax",
         max_age=7 * 24 * 60 * 60,
     )
     return {"access_token": new_access}
@@ -71,7 +74,11 @@ async def logout(
 ):
     if refresh_token:
         await logout_user(refresh_token, db)
-    response.delete_cookie("refresh_token")
+    response.delete_cookie(
+        "refresh_token",
+        secure=IS_PROD,
+        samesite="none" if IS_PROD else "lax",
+    )
     return {"message": "Logged out"}
 
 
