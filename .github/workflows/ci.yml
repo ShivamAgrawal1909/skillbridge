@@ -45,6 +45,7 @@ jobs:
 
       - name: install deps
         run: pip install -r requirements.txt
+
       - name: run migrations
         env:
           DATABASE_URL: postgresql+asyncpg://skillbridge:skillbridge@localhost:5432/skillbridge_test  
@@ -67,5 +68,5 @@ jobs:
         run: pytest --cov=app --cov-report=term-missing -v
 
       - name: security audit
-      run: pip-audit --ignore-vuln PYSEC-2024-232 --ignore-vuln PYSEC-2024-233 --ignore-vuln PYSEC-2025-185 --ignore-vuln GHSA-6w46-j5rx-g56g
-      continue-on-error: true
+        run: pip-audit --ignore-vuln PYSEC-2024-232 --ignore-vuln PYSEC-2024-233 --ignore-vuln PYSEC-2025-185 --ignore-vuln GHSA-6w46-j5rx-g56g
+        continue-on-error: true
