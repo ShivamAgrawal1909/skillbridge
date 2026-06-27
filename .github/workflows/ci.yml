@@ -45,6 +45,10 @@ jobs:
 
       - name: install deps
         run: pip install -r requirements.txt
+      - name: run migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://skillbridge:skillbridge@localhost:5432/skillbridge_test
+        run: alembic upgrade head
 
       - name: run tests
         env:
