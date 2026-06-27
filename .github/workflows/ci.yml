@@ -51,6 +51,12 @@ jobs:
           SECRET_KEY: test-secret-key-not-for-production
         run: alembic upgrade head
 
+      - name: seed database
+        env:
+          DATABASE_URL: postgresql+asyncpg://skillbridge:skillbridge@localhost:5432/skillbridge_test
+          SECRET_KEY: test-secret-key-not-for-production
+        run: python -m app.seed
+
       - name: run tests
         env:
           ENV: test
