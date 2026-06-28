@@ -1,5 +1,5 @@
 # web
-fastapi==0.116.1
+fastapi==0.116.2
 uvicorn[standard]==0.30.6
 python-multipart==0.0.31
 
