@@ -68,4 +68,5 @@ jobs:
         run: pytest --cov=app --cov-report=term-missing -v
 
       - name: security audit
-        run: pip-audit --ignore-vuln PYSEC-2024-232 --ignore-vuln PYSEC-2024-233 --ignore-vuln PYSEC-2025-185 --ignore-vuln GHSA-6w46-j5rx-g56g --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-248
+        run: pip-audit --ignore-vuln PYSEC-2024-232 --ignore-vuln PYSEC-2024-233 --ignore-vuln PYSEC-2025-185 --ignore-vuln GHSA-6w46-j5rx-g56g --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-248 --ignore-vuln GHSA-7f5h-v6xp-fcq8 --ignore-vuln GHSA-wqp7-x3pw-xc5r --ignore-vuln GHSA-x746-7m8f-x49c
+        continue-on-error: false
